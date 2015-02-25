@@ -214,8 +214,7 @@ def render_charm_config(config):
     charm_conf = load_template('charmconf.yaml')
     template_args = dict(
         install_type=config.getopt('install_type'),
-        openstack_password=config.getopt('openstack_password'),
-        ubuntu_series=config.getopt('ubuntu_series'))
+        openstack_password=config.getopt('openstack_password'))
 
     if config.getopt('openstack_release'):
         template_args['openstack_release'] = config.getopt(

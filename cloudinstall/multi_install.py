@@ -107,7 +107,9 @@ class MultiInstall:
         render_parts = {'openstack_password':
                         self.config.getopt('openstack_password'),
                         'maas_server': maas_creds['api_host'],
-                        'maas_apikey': maas_creds['api_key']}
+                        'maas_apikey': maas_creds['api_key'],
+                        'ubuntu_series':
+                        self.config.getopt('ubuntu_series')}
 
         if self.config.getopt('http_proxy'):
             render_parts['http_proxy'] = self.config.getopt('http_proxy')

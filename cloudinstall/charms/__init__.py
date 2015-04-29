@@ -226,11 +226,27 @@ export OS_REGION_NAME=RegionOne
                            'neutron-openvswitch', 'neutron-api',
                            'keystone', 'glance', 'cinder',
                            'nova-compute', 'ceph-osd', 'ceph-radosgw']
+        demobranches = {
+            'cinder': 'lp:~corey.bryant/charms/trusty/cinder/git-kilo',
+            'glance': 'lp:~corey.bryant/charms/trusty/glance/git-kilo',
+            'keystone': 'lp:~corey.bryant/charms/trusty/keystone/git-kilo',
+            'neutron-api':
+            'lp:~corey.bryant/charms/trusty/neutron-api/git-kilo',
+            'neutron-openvswitch':
+            'lp:~corey.bryant/charms/trusty/neutron-openvswitch/git-kilo',
+            'nova-compute':
+            'lp:~corey.bryant/charms/trusty/nova-compute/git-kilo',
+            'openstack-dashboard':
+            'lp:~corey.bryant/charms/trusty/openstack-dashboard/git-kilo',
+            'quantum-gateway':
+            'lp:~corey.bryant/charms/trusty/quantum-gateway/git-kilo'}
 
         if self.config.getopt('next_charms') and \
            self.charm_name in have_nextbranch:
-            self.bzr_get("lp:~openstack-charmers/charms/trusty/{}"
-                         "/next".format(self.charm_name))
+            branch = demobranches.get(self.charm_name,
+                                      "lp:~openstack-charmers/charms/trusty/{}"
+                                      "/next".format(self.charm_name))
+            self.bzr_get(branch)
             self.local_deploy(machine_spec)
             return False
 
@@ -261,13 +277,15 @@ export OS_REGION_NAME=RegionOne
         return False
 
     def bzr_get(self, branch_name):
+        self.ui.status_info_message("BZR branching '{}'".format(branch_name))
         localrepo = os.path.join(self.config.cfg_path,
                                  'local-charms',
                                  'trusty', self.charm_name)
         os.makedirs(localrepo, exist_ok=True)
         try:
             subprocess.check_output(['bzr', 'co', '--lightweight',
-                                     branch_name, localrepo])
+                                     branch_name, localrepo],
+                                    stderr=subprocess.STDOUT)
         except Exception as e:
             log.warning("error checking out charm: "
                         "rc={} out={}".format(e.returncode,
@@ -295,8 +313,12 @@ export OS_REGION_NAME=RegionOne
             cmd += ' --config ' + CHARM_CONFIG_FILENAME
 
         try:
-            log.debug("Deploying {} from local: {}".format(self.charm_name,
-                                                           cmd))
+
+            infostr = ("Deploying {} from local: {}".format(self.charm_name,
+                                                            cmd))
+            log.debug(infostr)
+            self.ui.status_info_message(infostr)
+
             cmd_output = subprocess.check_output(cmd, stderr=subprocess.STDOUT,
                                                  shell=True)
 

@@ -226,6 +226,7 @@ export OS_REGION_NAME=RegionOne
                            'neutron-openvswitch', 'neutron-api',
                            'keystone', 'glance', 'cinder',
                            'nova-compute', 'ceph-osd', 'ceph-radosgw']
+
         demobranches = {
             'cinder': 'lp:~corey.bryant/charms/trusty/cinder/git-kilo',
             'glance': 'lp:~corey.bryant/charms/trusty/glance/git-kilo',
@@ -242,6 +243,7 @@ export OS_REGION_NAME=RegionOne
             'lp:~corey.bryant/charms/trusty/quantum-gateway/git-kilo'}
 
         if self.config.getopt('next_charms') and \
+           self.config.getopt('openstack_tip') and \
            self.charm_name in have_nextbranch:
             branch = demobranches.get(self.charm_name,
                                       "lp:~openstack-charmers/charms/trusty/{}"

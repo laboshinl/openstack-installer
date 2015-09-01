@@ -1,5 +1,4 @@
-#
-# Copyright 2014 Canonical, Ltd.
+# Copyright 2014, 2015 Canonical, Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -122,7 +121,6 @@ class MachineWaitView(WidgetWrap):
         # ensure that the button is always focused:
         self.main_pile.focus_position = len(self.main_pile.contents) - 1
 
-    @utils.async
     def do_continue(self, *args, **kwargs):
         self.installer.do_install()
 

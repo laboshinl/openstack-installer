@@ -16,21 +16,17 @@
 
 import urwid
 import sys
-import cloudinstall.utils as utils
 from cloudinstall.state import ControllerState
+from tornado.ioloop import IOLoop
 
 import logging
-import threading
 
 log = logging.getLogger('cloudinstall.ev')
 
 
 class EventLoop:
 
-    """ Abstracts out event loops in different scenarios
-
-    TODO: finish asyncio implementation when urwid 1.3.0
-    becomes available.
+    """ Abstracts out event loop
     """
 
     def __init__(self, ui, config, log):
@@ -40,13 +36,7 @@ class EventLoop:
         self.error_code = 0
         self._callback_map = {}
 
-        self.loop = None
-
-        if not self.config.getopt('headless'):
-            self.loop = self._build_loop()
-            self.loop.set_alarm_in(2, self.check_thread_exit_event)
-            self._loop_thread = threading.current_thread()
-            self._thread_exit_event = threading.Event()
+        self.loop = self._build_loop()
 
     def register_callback(self, key, val):
         """ Registers some additional callbacks that didn't make sense
@@ -58,12 +48,16 @@ class EventLoop:
         self._callback_map[key] = val
 
     def _build_loop(self):
-        """ Returns event loop configured with color palette """
-        loop = urwid.MainLoop(self.ui, self.config.STYLES,
-                              unhandled_input=self.header_hotkeys)
-        utils.make_screen_hicolor(loop.screen)
-        loop.screen.register_palette(self.config.STYLES)
-        return loop
+        additional_opts = {
+            'screen': urwid.raw_display.Screen(),
+            'unhandled_input': self.header_hotkeys,
+            'handle_mouse': True
+        }
+        additional_opts['screen'].set_terminal_properties(colors=256)
+        additional_opts['screen'].reset_default_terminal_palette()
+        evl = urwid.TornadoEventLoop(IOLoop())
+        return urwid.MainLoop(
+            self.ui, self.config.STYLES, event_loop=evl, **additional_opts)
 
     def header_hotkeys(self, key):
         if not self.config.getopt('headless'):
@@ -93,21 +87,7 @@ class EventLoop:
         if self.config.getopt('headless'):
             sys.exit(err)
 
-        if threading.current_thread() == self._loop_thread:
-            raise urwid.ExitMainLoop()
-        else:
-            self._thread_exit_event.set()
-            log.debug("{} exiting, deferred UI exit "
-                      "to main thread.".format(
-                          threading.current_thread().name))
-
-    def check_thread_exit_event(self, *args, **kwargs):
-        if self._thread_exit_event.is_set():
-            raise urwid.ExitMainLoop()
-        self.loop.set_alarm_in(2, self.check_thread_exit_event)
-
-    def close(self):
-        pass
+        raise urwid.ExitMainLoop()
 
     def redraw_screen(self):
         if not self.config.getopt('headless'):
@@ -139,4 +119,4 @@ class EventLoop:
         if self.config.getopt('headless'):
             return "<eventloop disabled>"
         else:
-            return "<eventloop urwid based on select()>"
+            return "<eventloop urwid based on tornado()>"

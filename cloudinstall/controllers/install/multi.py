@@ -21,10 +21,12 @@ import shlex
 import socket
 import time
 import yaml
-
+import traceback
+from tornado.gen import coroutine
 from subprocess import check_output
 from tempfile import TemporaryDirectory
 
+from cloudinstall.async import Async
 from cloudinstall.state import InstallState
 from cloudinstall.netutils import get_ip_set
 
@@ -65,6 +67,9 @@ class MultiInstall:
             except:
                 raise MaasInstallError(
                     "Unable to set ownership for {}".format(d))
+
+    def do_install_async(self):
+        return Async.pool.submit(self.do_install)
 
     def do_install(self):
         # Install package deps
@@ -234,6 +239,7 @@ class MultiInstall:
 
 class MultiInstallExistingMaas(MultiInstall):
 
+    @coroutine
     def run(self):
         self.tasker.register_tasks(["Bootstrapping Juju"] +
                                    self.post_tasks)
@@ -246,7 +252,10 @@ class MultiInstallExistingMaas(MultiInstall):
             # return here and end thread. machine_wait_view will call
             # do_install back on new async thread
         else:
-            self.do_install()
+            try:
+                yield self.do_install_async()
+            except:
+                self.display_controller.show_step_info(traceback.format_exc())
 
 
 class MaasInstallError(Exception):

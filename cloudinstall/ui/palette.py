@@ -19,14 +19,14 @@
 def apply_default_colors(cls):
     color_map = {'orange': '#f60',
                  'light_orange': '#f80',
-                 'dark_magenta': 'dark magenta',
+                 'dark_magenta': '#608',
                  'light_magenta': 'light magenta',
                  'light_red': 'light red',
                  'white': 'white',
                  'black': 'black',
-                 'light_gray': 'light gray',
+                 'light_gray': 'g82',
                  'cool_gray': 'g50',
-                 'warm_gray': 'dark gray'}
+                 'warm_gray': 'g15'}
     for k, v in color_map.items():
         setattr(cls, k, v)
     return cls
@@ -65,9 +65,12 @@ STYLES = [
      Palette.white, Palette.warm_gray),
     ('string_input focus', '', '', '',
      Palette.white, Palette.orange),
-    ('header_menu', 'light gray', 'dark gray'),
-    ('header_title', 'light gray,bold', 'dark magenta'),
-    ('subheading', 'dark gray,bold', 'default'),
+    ('dialog', '', '', '',
+     Palette.white, Palette.warm_gray),
+    ('radio_input', '', '', '',
+     Palette.white, Palette.warm_gray),
+    ('radio_input focus', '', '', '',
+     Palette.orange, Palette.warm_gray),
     ('deploy_highlight_start', 'dark gray', 'light green'),
     ('deploy_highlight_end', 'dark gray', 'dark green'),
     ('disabled_button', 'black', 'white'),
@@ -77,9 +80,6 @@ STYLES = [
     ('filter_focus', 'dark gray,underline', 'light gray'),
     ('focus', 'white', 'dark gray'),
     ('radio focus', 'white,bold', 'dark magenta'),
-    ('input', 'white', 'dark gray'),
-    ('input focus', 'dark magenta,bold', 'dark gray'),
-    ('dialog', 'white', 'dark gray'),
     ('status_extra', 'light gray,bold', 'dark gray'),
     ('error', 'white', 'dark red'),
     ('info', 'light green', 'default'),

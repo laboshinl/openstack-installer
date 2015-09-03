@@ -588,8 +588,7 @@ class PlacementController:
 
         if maas_machines is None:
             maas_machines = self.maas_state.machines(
-                MaasMachineStatus.READY,
-                tag=self.config.getopt('maas_tag'))
+                MaasMachineStatus.READY, tag=self.config.getopt('maas_tag'))
 
         def satisfying_machine(constraints):
             for machine in maas_machines:

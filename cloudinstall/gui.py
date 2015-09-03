@@ -408,7 +408,7 @@ class StatusBar(WidgetWrap):
         status = []
         status.append(Pile([self._horizon_url, self._jujugui_url]))
         status.append(('pack', self._openstack_rel))
-        return AttrWrap(Columns(status), 'status_extra')
+        return Color.frame_footer(Columns(status))
 
     def set_openstack_rel(self, text="Icehouse (2014.1.1)"):
         """ Updates openstack release text
@@ -488,6 +488,7 @@ def _check_encoding():
 
 
 class PegasusGUI(WidgetWrap):
+    key_conversion_map = {'tab': 'down', 'shift tab': 'up'}
 
     def __init__(self, header=None, body=None, footer=None):
         _check_encoding()  # Make sure terminal supports utf8
@@ -507,6 +508,10 @@ class PegasusGUI(WidgetWrap):
         self.machine_wait_view = None
         self.add_services_dialog = None
         super().__init__(self.frame)
+
+    def keypress(self, size, key):
+        key = self.key_conversion_map.get(key, key)
+        return super().keypress(size, key)
 
     def _build_overlay_widget(self,
                               top_w,
@@ -591,8 +596,7 @@ class PegasusGUI(WidgetWrap):
         self.hide_widget_on_top()
 
     def show_selector_with_desc(self, title, opts, cb):
-        widget = SelectorWithDescription(title, opts, cb)
-        self.show_widget_on_top(widget, width=80, height=14)
+        self.frame.body = SelectorWithDescription(title, opts, cb)
 
     def hide_selector_with_desc(self):
         self.hide_widget_on_top()

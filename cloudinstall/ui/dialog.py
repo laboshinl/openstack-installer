@@ -14,12 +14,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals
-from urwid import (LineBox,
-                   ListBox, BoxAdapter, WidgetWrap,
-                   RadioButton, SimpleListWalker, Divider, Button,
+from urwid import (LineBox, ListBox,
+                   BoxAdapter, WidgetWrap,
+                   RadioButton, Divider, Button,
                    signals, emit_signal, connect_signal)
 from collections import OrderedDict
 from cloudinstall.ui.input import EditInput
+from cloudinstall.ui.lists import SimpleList
 from cloudinstall.ui.utils import Color, Padding
 
 import logging
@@ -54,7 +55,7 @@ class Dialog(WidgetWrap):
         w = Color.dialog(w)
 
         connect_signal(self, 'done', self.cb)
-        super().__init__(w)
+        super().__init__(ListBox(w))
 
     def keypress(self, size, key):
         key = self.key_conversion_map.get(key, key)
@@ -87,7 +88,7 @@ class Dialog(WidgetWrap):
             Padding.center_20(self.btn_confirm),
             Padding.center_20(self.btn_cancel)
         ]
-        container_lbox = ListBox(body)
+        container_lbox = SimpleList(body)
         log.debug(container_lbox)
         container_adapter = BoxAdapter(container_lbox,
                                        height=len(body))

@@ -18,11 +18,13 @@
 from __future__ import unicode_literals
 
 import logging
-from urwid import (Button, LineBox, ListBox, Pile, AttrWrap,
+from urwid import (Button, LineBox, ListBox, Pile,
                    RadioButton, SimpleListWalker, Text, WidgetWrap,
-                   BoxAdapter, Divider, Columns)
+                   Divider, Columns, signals, emit_signal,
+                   connect_signal)
 from collections import OrderedDict
 from cloudinstall.ui.dialog import Dialog
+from cloudinstall.ui.lists import SimpleList
 from cloudinstall.ui.utils import Color, Padding
 
 log = logging.getLogger('cloudinstall.ui')
@@ -151,6 +153,7 @@ class Selector(Dialog):
     """
 
     def __init__(self, title, opts, cb):
+        log.debug("In selector dialog")
         super().__init__(title, cb)
         for item in opts:
             self.add_radio(item)
@@ -164,7 +167,7 @@ class Selector(Dialog):
         self.emit_done_signal(selected_item)
 
 
-class SelectorWithDescription(Dialog):
+class SelectorWithDescription(WidgetWrap):
 
     """
     Simple selector box
@@ -174,40 +177,43 @@ class SelectorWithDescription(Dialog):
     :param cb: callback
     :returns: item selected from dialog
     """
+    __metaclass__ = signals.MetaSignals
+    signals = ['done']
 
     def __init__(self, title, opts, cb):
-        super().__init__(title, cb)
         self.radio_items = OrderedDict()
         for item, desc in opts:
             self.add_radio(item, desc)
-        self.show()
+        connect_signal(self, 'done', cb)
+        super().__init__(self._build_widget())
 
     def add_radio(self, item, desc, group=[]):
         self.radio_items[item] = (RadioButton(group, item), desc)
 
-    def _build_widget(self, **kwargs):
-        total_items = []
-        for option, desc in self.radio_items.items():
-            col1 = Columns([
-                Color.radio_input(option,
-                                  focus_map='radio_input focus'),
-                Color.radio_input(
-                    Text(desc),
-                    focus_map='radio_input focus')
-            ])
-            total_items.append(col1)
-            total_items.append(Divider('-'))
-
-        body = [
-            total_items,
-            Divider(),
-            Padding.center_20(self.btn_confirm),
-            Padding.center_20(self.btn_cancel)
+    def _build_buttons(self):
+        buttons = [
+            Color.button_primary(
+                Button("Confirm", self.submit),
+                focus_map='button_primary focus'),
+            Color.button_secondary(
+                Button("Cancel", self.cancel),
+                focus_map='button_secondary focus')
         ]
-        container_lbox = ListBox(body)
-        return LineBox(BoxAdapter(container_lbox,
-                                  height=len(body)),
-                       title=self.title)
+        return Pile(buttons)
+
+    def _build_widget(self):
+        total_items = [Padding.line_break("")]
+        for item in self.radio_items.keys():
+            opt, desc = self.radio_items[item]
+            col = Columns(
+                [
+                    ("weight", 0.4, opt),
+                    Color.body(Text(desc))
+                ], dividechars=1)
+            total_items.append(Padding.center_79(col))
+            total_items.append(Padding.center_79(Divider('-', 1, 1)))
+        total_items.append(Padding.center_20(self._build_buttons()))
+        return SimpleList(total_items)
 
     def submit(self, button):
         for item in self.radio_items.keys():
@@ -215,6 +221,12 @@ class SelectorWithDescription(Dialog):
             if _item.get_state():
                 selected_item = _item.label
         self.emit_done_signal(selected_item)
+
+    def cancel(self, button):
+        raise SystemExit("Installation cancelled.")
+
+    def emit_done_signal(self, *args):
+        emit_signal(self, 'done', *args)
 
 
 class PasswordInput(Dialog):

@@ -21,8 +21,6 @@ import shlex
 import socket
 import time
 import yaml
-import traceback
-from tornado.gen import coroutine
 from subprocess import check_output
 from tempfile import TemporaryDirectory
 
@@ -239,7 +237,6 @@ class MultiInstall:
 
 class MultiInstallExistingMaas(MultiInstall):
 
-    @coroutine
     def run(self):
         self.tasker.register_tasks(["Bootstrapping Juju"] +
                                    self.post_tasks)
@@ -252,10 +249,7 @@ class MultiInstallExistingMaas(MultiInstall):
             # return here and end thread. machine_wait_view will call
             # do_install back on new async thread
         else:
-            try:
-                yield self.do_install_async()
-            except:
-                self.display_controller.show_step_info(traceback.format_exc())
+            self.do_install()
 
 
 class MaasInstallError(Exception):

@@ -14,12 +14,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals
-from urwid import (AttrWrap, LineBox,
+from urwid import (LineBox,
                    ListBox, BoxAdapter, WidgetWrap,
-                   Pile, RadioButton, SimpleListWalker, Divider, Button,
+                   RadioButton, SimpleListWalker, Divider, Button,
                    signals, emit_signal, connect_signal)
 from collections import OrderedDict
 from cloudinstall.ui.input import EditInput
+from cloudinstall.ui.utils import Color, Padding
 
 import logging
 
@@ -40,14 +41,17 @@ class Dialog(WidgetWrap):
         self.cb = cb
         self.input_items = OrderedDict()
         self.input_lbox = []
-        self.container_lbox = []
         self.btn_pile = None
-        self.btn_confirm = None
-        self.btn_cancel = None
+        self.btn_confirm = Color.button_primary(
+            Button("Confirm", self.submit),
+            focus_map='button_primary focus')
+        self.btn_cancel = Color.button_secondary(
+            Button("Cancel", self.cancel),
+            focus_map='button_secondary focus')
 
     def show(self):
         w = self._build_widget()
-        w = AttrWrap(w, 'dialog')
+        w = Color.dialog(w)
 
         connect_signal(self, 'done', self.cb)
         super().__init__(w)
@@ -55,17 +59,6 @@ class Dialog(WidgetWrap):
     def keypress(self, size, key):
         key = self.key_conversion_map.get(key, key)
         return super().keypress(size, key)
-
-    def add_buttons(self):
-        """ Adds default CONFIRM/Cancel buttons for dialog
-        """
-        self.btn_confirm = AttrWrap(Button("Confirm", self.submit),
-                                    'button_primary',
-                                    'button_primary focus')
-        self.btn_cancel = AttrWrap(Button("Cancel", self.cancel),
-                                   'button_secondary',
-                                   'button_secondary focus')
-        self.btn_pile = Pile([self.btn_confirm, self.btn_cancel])
 
     def add_input(self, key, caption, **kwargs):
         """ Adds input boxes while setting their label attributes for
@@ -82,27 +75,24 @@ class Dialog(WidgetWrap):
         self.input_items[item] = RadioButton(group, item)
 
     def _build_widget(self, **kwargs):
-
+        log.debug("DIALOG build widget")
         total_items = []
         for _item in self.input_items.keys():
-            total_items.append(AttrWrap(
-                self.input_items[_item], 'input', 'input focus'))
-        self.input_lbox = ListBox(SimpleListWalker(total_items))
+            total_items.append(Color.string_input(
+                self.input_items[_item], focus_map='string_input focus'))
 
-        # Add buttons
-        self.add_buttons()
-        self.container_box_adapter = BoxAdapter(self.input_lbox,
-                                                len(total_items))
-        self.container_lbox = ListBox(
-            [self.container_box_adapter,
-             Divider(),
-             self.btn_pile])
-
-        return LineBox(
-            BoxAdapter(self.container_lbox,
-                       height=len(total_items) + 1 +
-                       len(self.btn_pile.contents)),
-            title=self.title)
+        body = [
+            total_items,
+            Divider(),
+            Padding.center_20(self.btn_confirm),
+            Padding.center_20(self.btn_cancel)
+        ]
+        container_lbox = ListBox(body)
+        log.debug(container_lbox)
+        container_adapter = BoxAdapter(container_lbox,
+                                       height=len(body))
+        log.debug(container_adapter)
+        return LineBox(container_adapter, title=self.title)
 
     def submit(self, button):
         self.emit_done_signal(self.input_items)

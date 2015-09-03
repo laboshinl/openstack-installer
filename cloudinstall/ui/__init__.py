@@ -20,9 +20,10 @@ from __future__ import unicode_literals
 import logging
 from urwid import (Button, LineBox, ListBox, Pile, AttrWrap,
                    RadioButton, SimpleListWalker, Text, WidgetWrap,
-                   BoxAdapter, Divider)
+                   BoxAdapter, Divider, Columns)
 from collections import OrderedDict
 from cloudinstall.ui.dialog import Dialog
+from cloudinstall.ui.utils import Color, Padding
 
 log = logging.getLogger('cloudinstall.ui')
 
@@ -186,29 +187,27 @@ class SelectorWithDescription(Dialog):
 
     def _build_widget(self, **kwargs):
         total_items = []
-        for _item in self.radio_items.keys():
-            desc = AttrWrap(
-                Text("  {}".format(
-                    self.radio_items[_item][1])), 'input', 'input focus')
-            total_items.append(
-                AttrWrap(self.radio_items[_item][0], 'input', 'input focus'))
-            total_items.append(AttrWrap(desc, 'input'))
+        for option, desc in self.radio_items.items():
+            col1 = Columns([
+                Color.radio_input(option,
+                                  focus_map='radio_input focus'),
+                Color.radio_input(
+                    Text(desc),
+                    focus_map='radio_input focus')
+            ])
+            total_items.append(col1)
             total_items.append(Divider('-'))
 
-        self.input_lbox = ListBox(SimpleListWalker(total_items[:-1]))
-        self.add_buttons()
-
-        self.container_box_adapter = BoxAdapter(self.input_lbox,
-                                                len(total_items))
-        self.container_lbox = ListBox(
-            [self.container_box_adapter,
-             Divider(),
-             self.btn_pile])
-
-        return LineBox(
-            BoxAdapter(self.container_lbox,
-                       height=len(total_items) + 3),
-            title=self.title)
+        body = [
+            total_items,
+            Divider(),
+            Padding.center_20(self.btn_confirm),
+            Padding.center_20(self.btn_cancel)
+        ]
+        container_lbox = ListBox(body)
+        return LineBox(BoxAdapter(container_lbox,
+                                  height=len(body)),
+                       title=self.title)
 
     def submit(self, button):
         for item in self.radio_items.keys():

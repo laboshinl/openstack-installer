@@ -42,6 +42,7 @@ from cloudinstall.ui import (ScrollableWidgetWrap,
                              LandscapeInput,
                              DhcpRangeInput,
                              InfoDialog)
+from cloudinstall.ui.utils import Color
 from cloudinstall.ui.helpscreen import HelpScreen
 from cloudinstall.machinewait import MachineWaitView
 from cloudinstall.placement.ui import PlacementView
@@ -352,8 +353,7 @@ class ServicesView(ScrollableWidgetWrap):
 class Header(WidgetWrap):
 
     def __init__(self):
-        self.title_widget = AttrWrap(padding(Text(TITLE_TEXT)),
-                                     "header_title")
+        self.title_widget = Color.frame_header(padding(Text(TITLE_TEXT)))
         self.pile = Pile([self.title_widget, Text("")])
         self.set_show_add_units_hotkey(False)
         super().__init__(self.pile)
@@ -367,10 +367,9 @@ class Header(WidgetWrap):
             add_unit_string = '(A)dd Services \N{BULLET}'
         else:
             add_unit_string = ''
-        tw = AttrWrap(Text(add_unit_string + ' (H)elp \N{BULLET} '
-                           '(R)efresh \N{BULLET} (Q)uit',
-                           align='center'),
-                      "header_menu")
+        tw = Color.frame_subheader(Text(add_unit_string + ' (H)elp \N{BULLET} '
+                                        '(R)efresh \N{BULLET} (Q)uit',
+                                        align='center'))
         self.pile.contents[1] = (tw, self.pile.options())
 
 
@@ -378,11 +377,10 @@ class InstallHeader(WidgetWrap):
 
     def __init__(self):
         w = []
-        w.append(AttrWrap(padding(
-            Text("Ubuntu Openstack Installer - Software Installation")),
-            "header_title"))
-        w.append(AttrWrap(Text(
-            '(Q)uit', align='center'), "header_menu"))
+        w.append(Color.frame_header(padding(
+            Text("Ubuntu Openstack Installer - Software Installation"))))
+        w.append(Color.frame_subheader(Text(
+            '(Q)uit', align='center')))
         w = Pile(w)
         super().__init__(w)
 
@@ -468,7 +466,7 @@ class StepInfo(WidgetWrap):
         listbox = ListBox([Text(msg)])
         box_adapter = BoxAdapter(listbox, height=height)
         linebox = LineBox(box_adapter, title="Info")
-        super().__init__(AttrWrap(linebox, 'dialog'))
+        super().__init__(Color.dialog(linebox))
 
 
 def _check_encoding():
